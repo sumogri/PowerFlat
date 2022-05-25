@@ -17,25 +17,66 @@ namespace PowerFlat
         [SerializeField] private Vector3 powerAngle;
 
         private bool requireAddForce = false;
+        private MeshRenderer meshRenderer;
 
-        // Start is called before the first frame update
-        void Start()
+        private void Start()
         {
-        
+            //debug用.
+            meshRenderer = gameObject.GetComponent<MeshRenderer>();
+        }
+
+        private void DebugChangeColor(Color color)
+        {
+            var mat = meshRenderer.material;
+            mat.color = color;
+            meshRenderer.material = mat;
+
         }
 
         // Update is called once per frame
         void Update()
         {
-            if(Input.GetKeyDown(key))
+            if (Input.GetKeyDown(key))
             {
                 requireAddForce = true;
             }
+            if (Input.GetKeyUp(key))
+            {
+                requireAddForce = false;
+            }
+
+            if (requireAddForce)
+            {
+                DebugChangeColor(Color.red);
+            }
+            else 
+            {
+                DebugChangeColor(Color.white);
+            }
         }
 
-        private void OnTriggerEnter(Collider other)
+
+        public void SetKeyCode(KeyCode key)
         {
-            Debug.Log($"{other.gameObject.name}");
+            this.key = key;
+        }
+
+        private void OnTriggerStay(Collider other)
+        {
+            // リクエストないので、スキップ
+            if (!requireAddForce)
+            {
+                return;
+            }
+
+            var rb = other.GetComponent<Rigidbody>();
+            if (rb == null)
+            {
+                return; //rbないオブジェクトには、何もできない.
+            }
+
+            rb.AddForce(powerAngle,ForceMode.Impulse);
+            requireAddForce = false; //一発殴ったら解除.
         }
     }
 }
